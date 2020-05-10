@@ -23,6 +23,8 @@
 
 #pragma comment (lib, "cudart_static.lib")
 
+#include "matrix.h"
+
 using namespace std;
 
 const int width = 800,
