@@ -8,6 +8,7 @@ matrix::~matrix()
 {
 	cols = rows = 0;
 	delete[] data;
+	data = nullptr;
 }
 
 matrix::matrix(const matrix& copy):cols(copy.cols),rows(copy.rows)
@@ -20,6 +21,53 @@ matrix::matrix(int _cols, int _rows, const float* _data):cols(_cols),rows(_rows)
 {
 	data = new float[cols * rows];
 	memcpy(data, _data, cols * rows * sizeof(float));
+}
+
+int matrix::getRows() const
+{
+	return rows;
+}
+
+int matrix::getCols() const
+{
+	return cols;
+}
+
+const float* matrix::getDataPtr() const
+{
+	return data;
+}
+
+float matrix::getData(int c, int r) const
+{
+	//column major matrices, for easy vectors
+	if (r < 0 || c < 0 || cols <= c || rows <= r)
+	{
+		std::string e_message("Matrix access out of range! ");
+		e_message += "Cols:" + std::to_string(cols) + ", Rows:" + std::to_string(rows) + " ";
+		e_message += "Accessed [" + std::to_string(c) + ", " + std::to_string(r) + "]\n";
+		throw std::out_of_range(e_message);
+		return 0.0f;
+	}
+
+	return data[r * cols + c];
+}
+
+float matrix::setData(int c, int r, float d)
+{
+	//column major matrices, for easy vectors
+	if (c < 0 || r < 0 || cols <= c || rows <= r)
+	{
+		std::string e_message("Matrix access out of range! ");
+		e_message += "Cols:" + std::to_string(cols) + ", Rows:" + std::to_string(rows) + " ";
+		e_message += "Accessed [" + std::to_string(c) + ", " + std::to_string(r) + "]\n";
+		throw std::out_of_range(e_message);
+		return 0.0f;
+	}
+
+	data[r * cols + c] = d;
+
+	return d;
 }
 
 matrix& matrix::operator=(const matrix& R)
