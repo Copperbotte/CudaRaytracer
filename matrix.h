@@ -26,9 +26,13 @@ public:
 	matrix  operator- (void) const;
 	matrix& operator+=(const matrix& R);
 	matrix& operator-=(const matrix& R);
+	matrix& operator*=(		 float   f);
+	matrix& operator*=(const matrix& R);
+	matrix& operator/=(		 float   f);
 
 	//binary operators
 	matrix  operator+ (const matrix& R) const;
 	matrix  operator- (const matrix& R) const;
+	matrix  operator* (const matrix& R) const;
 };
 

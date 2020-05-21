@@ -20,7 +20,11 @@ matrix::matrix(const matrix& copy):cols(copy.cols),rows(copy.rows)
 matrix::matrix(int _cols, int _rows, const float* _data):cols(_cols),rows(_rows),data(nullptr)
 {
 	data = new float[cols * rows];
-	memcpy(data, _data, cols * rows * sizeof(float));
+	if (_data)
+		memcpy(data, _data, cols * rows * sizeof(float));
+	else
+		for (int i = 0; i < cols * rows; ++i)
+			data[i] = 0.0f;
 }
 
 int matrix::getRows() const
@@ -97,7 +101,7 @@ matrix& matrix::operator+=(const matrix& R)
 	bool e_rows = rows != R.rows;
 	if (e_cols || e_rows)
 	{
-		std::string e_message("Domain Mismatch! ");
+		std::string e_message("Add domain mismatch! ");
 		e_message += "Cols[ L:" + std::to_string(cols) + ", R:" + std::to_string(R.cols) + "] ";
 		e_message += "Rows[ L:" + std::to_string(rows) + ", R:" + std::to_string(R.rows) + "]\n";
 		throw std::length_error(e_message);
@@ -115,6 +119,25 @@ matrix& matrix::operator-=(const matrix& R)
 	return *this += -R;
 }
 
+matrix& matrix::operator*=(float f)
+{
+	for (int i = 0; i < cols * rows; ++i)
+		data[i] *= f;
+	return *this;
+}
+
+matrix& matrix::operator*=(const matrix& R)
+{
+	return *this = *this * R;
+}
+
+matrix& matrix::operator/=(float f)
+{
+	for (int i = 0; i < cols * rows; ++i)
+		data[i] /= f;
+	return *this;
+}
+
 matrix matrix::operator+(const matrix& R) const
 {
 	return matrix(*this) += R;
@@ -123,4 +146,27 @@ matrix matrix::operator+(const matrix& R) const
 matrix matrix::operator-(const matrix& R) const
 {
 	return matrix(*this) -= R;
+}
+
+matrix matrix::operator*(const matrix& R) const
+{
+	bool e_mul = cols != R.rows;
+	if (e_mul)
+	{
+		std::string e_message("Multiply domain mismatch! ");
+		e_message += "Cols[ L:" + std::to_string(cols) + ", R:" + std::to_string(R.cols) + "] ";
+		e_message += "Rows[ L:" + std::to_string(rows) + ", R:" + std::to_string(R.rows) + "]\n";
+		throw std::length_error(e_message);
+		return *this;
+	}
+
+	//initialized as zero
+	matrix M(R.cols, rows, nullptr);
+
+	for (int c = 0; c < M.cols; ++c)
+		for (int r = 0; r < M.rows; ++r)
+			for (int n = 0; n < cols; ++n)
+				M.setData(c, r, M.getData(c, r) + getData(n, r) * R.getData(c, n));
+
+	return M;
 }
