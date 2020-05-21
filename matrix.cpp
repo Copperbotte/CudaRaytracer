@@ -27,6 +27,20 @@ matrix::matrix(int _cols, int _rows, const float* _data):cols(_cols),rows(_rows)
 			data[i] = 0.0f;
 }
 
+matrix matrix::identity(int cols, int rows)
+{
+	matrix M(cols, rows, nullptr);
+	int limit = min(cols, rows);
+	for (int n = 0; n < limit; ++n)
+		M.setData(n, n, 1.0);
+	return M;
+}
+
+matrix matrix::identity(int n)
+{
+	return matrix::identity(n, n);
+}
+
 int matrix::getRows() const
 {
 	return rows;
@@ -169,4 +183,85 @@ matrix matrix::operator*(const matrix& R) const
 				M.setData(c, r, M.getData(c, r) + getData(n, r) * R.getData(c, n));
 
 	return M;
+}
+
+matrix matrix::transpose() const
+{
+	matrix M(cols, rows, nullptr);
+
+	for (int c = 0; c < cols; ++c)
+		for (int r = 0; r < rows; ++r)
+			M.setData(r, c, getData(c, r));
+
+	return M;
+}
+
+matrix matrix::inverse() const
+{
+	bool e_inv = cols != rows;
+	if (e_inv)
+	{
+		std::string e_message("Non-square matrix inverse! ");
+		e_message += "Cols: " + std::to_string(cols) + " ";
+		e_message += "Rows: " + std::to_string(rows) + "\n";
+		throw std::length_error(e_message);
+		return *this;
+	}
+
+	//Gaussian elimination inverse
+	matrix M = *this;
+	matrix I = matrix::identity(cols, rows);
+
+	//Row cache for row operations
+	matrix Mr = matrix(M.getCols(), 1, nullptr);
+	matrix Ir = matrix(Mr);
+
+	//Row eschelon form
+	for (int i=0; i < M.getRows(); ++i)
+	{
+		//normalize leading coefficient of first row
+		float leading = M.getData(i, i);
+		for (int c = 0; c < M.getCols(); ++c)
+		{
+			M.setData(c, i, M.getData(c, i) / leading);
+			I.setData(c, i, I.getData(c, i) / leading);
+		}
+
+		//copy normalized row
+		for (int c = 0; c < M.getCols(); ++c)
+		{
+			Mr.setData(c, 0, M.getData(c, i));
+			Ir.setData(c, 0, I.getData(c, i));
+		}
+
+		//zero leading coefficient of all other rows using row operations
+		for (int r = i+1; r < M.getRows(); ++r)
+		{
+			//multiply 1st row by leading coefficient of other row
+			//subtract from other row
+			float MLead = M.getData(i, r);
+			for (int c = 0; c < M.getCols(); ++c)
+			{
+				M.setData(c, r, M.getData(c, r) - MLead * Mr.getData(c, 0));
+				I.setData(c, r, I.getData(c, r) - MLead * Ir.getData(c, 0));
+			}
+		}
+	}
+	
+	//Reduced row eschelon form
+	for (int i = M.getRows() - 1; 0 <= i; --i)
+	{
+		//zero trailing coefficients using row operations
+		for (int r = 0; r < i; ++r)
+		{
+			//the lowest element is already in rref, as a 1.0
+			//so only one element in the main matrix needs to be changed
+			float trail = M.getData(i, r);
+			M.setData(i, r, 0);
+			for (int c = 0; c < M.getCols(); ++c)
+				I.setData(c, r, I.getData(c, r) - trail * I.getData(c, i));
+		}
+	}
+
+	return I;
 }

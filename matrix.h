@@ -14,6 +14,9 @@ public:
 	matrix(const matrix& copy);
 	matrix(int cols, int rows, const float* data);
 
+	static matrix identity(int cols, int rows);
+	static matrix identity(int n);
+
 	//helper functions
 	int   getRows()	const;
 	int   getCols() const;
@@ -34,5 +37,9 @@ public:
 	matrix  operator+ (const matrix& R) const;
 	matrix  operator- (const matrix& R) const;
 	matrix  operator* (const matrix& R) const;
+
+	//transform operations
+	matrix  transpose() const;
+	matrix  inverse()   const;
 };
 
